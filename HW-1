@@ -1,0 +1,69 @@
+def read_matrix() -> list[list[float]]:
+    print("How many equations are in the system?")
+    num_equations = int(input("Number of equations:"))
+    print("Enter the coefficients for each equation.")
+    print("For example, for the equation 2x + 3y - z = 7, enter: 2 3 -1 7")
+    matrix = []
+    for i in range(num_equations):
+        line = input(f"Equation{i + 1}: ").strip()
+        coefficients = list(map(float, line.split()))
+        matrix.append(coefficients)
+    return matrix
+
+
+def gauss_elimination(matrix: list[list[float]]) -> list[list[float]]:
+    rows, cols = len(matrix), len(matrix[0])
+    
+    for i in range(rows):
+        max_row = max(range(i, rows), key=lambda k: abs(matrix[k][i]))
+        matrix[i], matrix[max_row] = matrix[max_row], matrix[i]
+        if abs(matrix[i][i]) < 1e-10:
+            continue
+        pivot = matrix[i][i]
+        for j in range(cols):
+            matrix[i][j] /= pivot
+        for k in range(rows):
+            if k != i:
+                factor = matrix[k][i]
+                for j in range(cols):
+                    matrix[k][j] -= factor * matrix[i][j]
+    return matrix
+
+
+def extract_solution(matrix: list[list[float]]) -> str:
+    rows, cols = len(matrix), len(matrix[0])
+    solution = [None] * (cols - 1)
+    for row in matrix:
+        if all(abs(coef) < 1e-10 for coef in row[:-1]) and abs(row[-1]) > 1e-10:
+            return "No solutions"
+        if all(abs(coef) < 1e-10 for coef in row[:-1]):
+            continue
+        for i in range(len(row) - 1):
+            if abs(row[i]) > 1e-10:
+                solution[i] = row[-1]
+                break
+    if None in solution:
+        free_vars = [f"x{i + 1}" for i, val in enumerate(solution) if val is None]
+        return f"The system has infinitely many solutions. Free variables: {', '.join(free_vars)}"
+    
+    return ", ".join(f"x{i + 1} = {round(val, 4)}" for i, val in enumerate(solution) if val is not None)
+
+
+def main():
+    matrix = read_matrix()
+    if not matrix:
+        print("Input error")
+        return
+    print("Coefficient matrix-augmented:")
+    for row in matrix:
+        print(row)
+    reduced_matrix = gauss_elimination(matrix)
+    print("\nafter Gaussian elimination:")
+    for row in reduced_matrix:
+        print(row)
+    solution = extract_solution(reduced_matrix)
+    print("Solution", solution)
+
+
+if __name__ == "__main__":
+    main()
