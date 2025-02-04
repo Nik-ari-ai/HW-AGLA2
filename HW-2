@@ -1,0 +1,80 @@
+def inverse_matrix(matrix):
+    length_matrix = len(matrix)
+
+    if len(matrix) != length_matrix or any(len(row) != length_matrix for row in matrix):
+        return [1, "The matrix must be squared"]
+
+    augmented_matrix = []
+    for i in range(length_matrix):
+        row = []
+        for j in range(length_matrix):
+            row.append(float(matrix[i][j]))
+        for j in range(length_matrix):
+            row.append(1 if i == j else 0)
+        augmented_matrix.append(row)
+
+    for i in range(length_matrix):
+        pivot_row = i
+        for j in range(i + 1, length_matrix):
+            if abs(augmented_matrix[j][i]) > abs(augmented_matrix[pivot_row][i]):
+                pivot_row = j
+
+        if pivot_row != i:
+            augmented_matrix[i], augmented_matrix[pivot_row] = augmented_matrix[pivot_row], augmented_matrix[i]
+
+        pivot = augmented_matrix[i][i]
+        if pivot == 0:
+            return [2, "The matrix is singular, no inverse exists."]
+
+        for j in range(2 * length_matrix):
+            augmented_matrix[i][j] /= pivot
+
+        for j in range(i + 1, length_matrix):
+            factor = augmented_matrix[j][i]
+            for k in range(2 * length_matrix):
+                augmented_matrix[j][k] -= factor * augmented_matrix[i][k]
+
+    for i in range(length_matrix - 1, -1, -1):
+        for j in range(i - 1, -1, -1):
+            factor = augmented_matrix[j][i]
+            for k in range(2 * length_matrix):
+                augmented_matrix[j][k] -= factor * augmented_matrix[i][k]
+
+    inverse = []
+    for i in range(length_matrix):
+        row = []
+        for j in range(length_matrix, 2 * length_matrix):
+            row.append(augmented_matrix[i][j])
+        inverse.append(row)
+
+    return [0, inverse]
+
+def main():
+    try:
+        length_matrix = int(input("Enter the size of the square matrix (n x n): "))
+        if length_matrix <= 0:
+            print("Error(The matrix size must be a positive number)")
+            return
+        
+        matrix = []
+        print("Enter the elements of the matrix row by row (separated by spaces):")
+        for i in range(length_matrix):
+            row = list(map(float, input().split()))
+            if len(row) != length_matrix:
+                print(f"Error(Please enter exactly {length_matrix} numbers in a row)")
+                return
+            matrix.append(row)
+
+        status, result = inverse_matrix(matrix)
+
+        if status == 0:
+            print("\nInverse matrix:")
+            for row in result:
+                print(" ".join(f"{num:.6f}" for num in row))
+        else:
+            print(f"Error({result})")
+
+    except ValueError:
+        print("Error: Please enter valid numbers")
+
+main()
