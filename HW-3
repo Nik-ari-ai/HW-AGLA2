@@ -1,0 +1,120 @@
+def read_matrix():
+    print("How many rows are in the matrix?")
+    num_rows = int(input())
+    print("How many columns are in the matrix?")
+    num_cols = int(input())
+    print("Enter the matrix row by row:")
+    matrix = []
+    for i in range(num_rows):
+        line = input(f"Row {i + 1}: ").strip()
+        coefficients = list(map(float, line.split()))
+        if len(coefficients) != num_cols:
+            print("Invalid row length. Please enter again.")
+            return read_matrix()
+        matrix.append(coefficients)
+    return matrix
+
+
+def gauss_elimination(matrix):
+    rows = len(matrix)
+    cols = len(matrix[0])
+    for i in range(rows):
+        max_value = 0
+        max_row = i
+        for k in range(i, rows):
+            if abs(matrix[k][i]) > max_value:
+                max_value = abs(matrix[k][i])
+                max_row = k
+        matrix[i], matrix[max_row] = matrix[max_row], matrix[i]
+        if abs(matrix[i][i]) < 1e-10:
+            continue
+        pivot = matrix[i][i]
+        for j in range(cols):
+            matrix[i][j] /= pivot
+        for k in range(rows):
+            if k != i:
+                factor = matrix[k][i]
+                for j in range(cols):
+                    matrix[k][j] -= factor * matrix[i][j]
+    return matrix
+
+
+def get_column_space(original_matrix, reduced_matrix):
+    rows = len(reduced_matrix)
+    cols = len(reduced_matrix[0])
+    pivot_columns = []
+    for j in range(cols):
+        for i in range(rows):
+            if abs(reduced_matrix[i][j]) > 1e-10:
+                pivot_columns.append(j)
+                break
+    column_space = []
+    for j in pivot_columns:
+        column = []
+        for i in range(len(original_matrix)):
+            column.append(original_matrix[i][j])
+        column_space.append(column)
+    return column_space
+
+
+def get_row_space(matrix):
+    row_space = []
+    for row in matrix:
+        if any(abs(x) > 1e-10 for x in row):
+            row_space.append(row)
+    return row_space
+
+
+def get_null_space(matrix):
+    rows = len(matrix)
+    cols = len(matrix[0])
+    pivot_columns = []
+    is_pivot = [False] * cols
+    for i in range(rows):
+        for j in range(cols):
+            if abs(matrix[i][j]) > 1e-10:
+                pivot_columns.append(j)
+                is_pivot[j] = True
+                break
+    free_variables = []
+    for j in range(cols):
+        if not is_pivot[j]:
+            free_variables.append(j)
+    null_space = []
+    for free_var in free_variables:
+        null_vector = [0] * cols
+        null_vector[free_var] = 1
+        for i in range(rows):
+            pivot_col = pivot_columns[i] if i < len(pivot_columns) else None
+            if pivot_col is not None and abs(matrix[i][free_var]) > 1e-10:
+                null_vector[pivot_col] = -matrix[i][free_var]
+        null_space.append(null_vector)
+    return sorted(null_space, key=lambda x: x.index(1) if 1 in x else len(x))
+
+
+def main():
+    matrix = read_matrix()
+    if not matrix:
+        print("Input error")
+        return
+    original_matrix = [row[:] for row in matrix]
+    reduced_matrix = gauss_elimination(matrix)
+    column_space = get_column_space(original_matrix, reduced_matrix)
+    row_space = get_row_space(reduced_matrix)
+    null_space = get_null_space(reduced_matrix)
+    print("\nColumn Space:")
+    for col in column_space:
+        print(col)
+    print("\nRow Space:")
+    for row in row_space:
+        print(row)
+    print("\nNull Space:")
+    if null_space:
+        for vec in null_space:
+            print(vec)
+    else:
+        print("Trivial solution: only the zero vector")
+
+
+if __name__ == "__main__":
+    main()
