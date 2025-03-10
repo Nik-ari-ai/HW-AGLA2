@@ -1,0 +1,66 @@
+import math
+VERBOSE = True       
+DECIMALS = 3          
+
+def dot(u, v):
+    return sum(x * y for x, y in zip(u, v))
+
+def norm(v):
+    return math.sqrt(dot(v, v))
+
+def vector_subtract(u, v):
+    return [x - y for x, y in zip(u, v)]
+
+def scalar_mult(s, v):
+    return [s * x for x in v]
+
+def format_vector(v, decimals=DECIMALS):
+    return "[" + ", ".join(f"{x:.{decimals}f}" for x in v) + "]"
+
+def gram_schmidt(vectors, verbose=VERBOSE):
+    orthogonal = []
+    for i, v in enumerate(vectors):
+        u = [float(x) for x in v]
+        if verbose:
+            print(f"Processing vector {i+1}: {format_vector(u)}")
+        for j, u_prev in enumerate(orthogonal):
+            proj_coeff = dot(v, u_prev) / dot(u_prev, u_prev)
+            proj = scalar_mult(proj_coeff, u_prev)
+            if verbose:
+                print(f"  Projection of {i+1} on basis vector {j+1}: {format_vector(proj)}")
+            u = vector_subtract(u, proj)
+            if verbose:
+                print(f"  {i+1} after subtracting projection: {format_vector(u)}")
+        u_norm = norm(u)
+        if u_norm < 1e-10:
+            if verbose:
+                print(f"{i+1} is ~ 0\n")
+            continue
+        u = scalar_mult(1.0 / u_norm, u)
+        orthogonal.append(u)
+        if verbose:
+            print(f"  Normalized vector {i+1}: {format_vector(u)}\n")
+    return orthogonal
+
+def main():
+    print("Enter the number of vectors:")
+    n = int(input())
+    print("Enter the dimension of the vectors:")
+    d = int(input())
+    vectors = []
+    for i in range(n):
+        print(f"Enter the elements of vector {i+1} (separated by spaces):")
+        s = input()
+        v = list(map(float, s.split()))
+        if len(v) != d:
+            print("Incorrect vector dimension")
+            return
+        vectors.append(v)
+    print("\nPerforming Gram-Schmid:\n")
+    basis = gram_schmidt(vectors, verbose=VERBOSE)
+    print("Orthonormal basis:")
+    for vec in basis:
+        print(format_vector(vec))
+
+if __name__ == "__main__":
+    main()
